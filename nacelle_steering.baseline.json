@@ -1,0 +1,7 @@
+[
+  {
+    "mutation": "> → >=",
+    "snippet": "if (diff > 0) return { ok: true, mode: 'port', diff };",
+    "reason": "Reviewed-equivalent. This line is reached only after the straight-branch has returned for every |diff| <= eps, and eps is guarded >= 0, so diff is never 0 here. `diff > 0` and `diff >= 0` therefore decide port-vs-starboard identically; no input can distinguish them, so no test can kill it. The mutant is equivalent, not test-theatre."
+  }
+]

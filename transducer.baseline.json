@@ -1,0 +1,7 @@
+[
+  {
+    "mutation": "< → <=",
+    "snippet": "for (let i = 0; i + p < gaps.length; i++) {",
+    "reason": "Reviewed-equivalent. Widening this bound to <= runs one extra iteration at i+p === gaps.length, where gaps[i+p] is undefined. The loop body computes Math.abs(gaps[i] - undefined) = NaN, and NaN > tol is false, so the body neither sets repeats=false nor breaks — the extra iteration is a guaranteed no-op on the only variable that escapes (repeats). Output is identical for every input, so no test can kill it; equivalent, not test-theatre."
+  }
+]

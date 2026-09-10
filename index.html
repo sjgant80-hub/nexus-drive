@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus Drive — a coupled-architecture bench</title>
+<meta name="description" content="Gary Floyd's / Nexus warp-drive architecture, built and interfaced as mutation-tested modules — run the coupled system and see whether it closes.">
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#131a24; --panel2:#1a2330; --line:#28323f;
+    --ink:#e8eef4; --dim:#8998a8; --accent:#5ad1c8; --accent2:#c9a6ff;
+    --good:#46d17a; --bad:#ff6b6b; --warn:#e0b341; --chip:#1c2632; --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,Segoe UI,Roboto,sans-serif;padding:0 0 4rem}
+  .wrap{max-width:940px;margin:0 auto;padding:0 1.25rem}
+  header{padding:3rem 0 1.6rem;border-bottom:1px solid var(--line)}
+  h1{font-size:2rem;letter-spacing:.01em}
+  .sub{color:var(--dim);margin-top:.5rem;max-width:46rem}
+  .by{color:var(--accent2);font:.85rem var(--mono);margin-top:.6rem}
+  h2{font-size:1.2rem;margin:2.4rem 0 1rem}
+  .thesis{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:1rem 1.2rem;margin:1.6rem 0}
+  .thesis.warn{border-left-color:var(--warn)}
+  .thesis.correct{border-left-color:var(--accent2)}
+  .run{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.4rem 0}
+  button{background:var(--accent);color:#04201d;border:0;border-radius:8px;padding:.7rem 1.5rem;font-weight:700;font-size:1rem;cursor:pointer}
+  button:hover{filter:brightness(1.08)}
+  .verdict{font:800 1.15rem var(--mono)}
+  .v-closes{color:var(--good)} .v-open{color:var(--bad)}
+  .flow{display:grid;grid-template-columns:1fr;gap:.5rem;margin:1rem 0}
+  .sub-row{display:grid;grid-template-columns:150px 1fr;gap:.8rem;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem .9rem}
+  .sub-row .name{font:700 .82rem var(--mono);letter-spacing:.03em}
+  .sub-row .name small{display:block;color:var(--dim);font-weight:400;letter-spacing:0;margin-top:.15rem}
+  .sub-row .detail{font:.86rem var(--mono);color:var(--dim);word-break:break-word}
+  .dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;margin-right:.4rem;vertical-align:middle}
+  .dot.ok{background:var(--good)} .dot.no{background:var(--bad)}
+  .gap{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:.9rem 1.1rem;margin:.8rem 0;font-size:.9rem}
+  .gap h3{font-size:.95rem;margin-bottom:.5rem;color:var(--warn)}
+  .gap li{margin:.35rem 0 .35rem 1.1rem;color:var(--dim)}
+  .gap code{color:var(--accent)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;margin:.6rem 0}
+  td,th{border:1px solid var(--line);padding:.45rem .6rem;text-align:left;vertical-align:top}
+  th{background:var(--panel);font-size:.8rem}
+  td{color:var(--dim)} td b{color:var(--ink)}
+  code{font:.88em var(--mono);background:var(--chip);padding:.08em .35em;border-radius:4px}
+  .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.7rem;margin:1rem 0}
+  .knob{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem .9rem}
+  .knob label{display:block;font-size:.8rem;color:var(--dim);margin-bottom:.35rem}
+  .knob input{width:100%}
+  .knob .val{font:.85rem var(--mono);color:var(--accent)}
+  footer{margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--line);color:var(--dim);font-size:.85rem}
+  footer a{color:var(--accent)}
+  .scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Nexus Drive — a coupled-architecture bench</h1>
+  <p class="sub">Six subsystems of Gary Floyd's / Nexus propulsion architecture, each built as a mutation-tested module and wired together through defined interfaces. Press run: the bench reports whether the coupled architecture <em>closes</em> — every subsystem coherent and every interface between them satisfied.</p>
+  <p class="by">architecture: Gary Floyd / Nexus · modeling &amp; gate: the estate · every module witness-CLEAN</p>
+</header>
+
+<div class="thesis">
+  <strong>What "closes" means — and what it does not.</strong> This is a test of the <em>architecture's coherence</em>: do the control loops stabilise, does the power balance, do the interfaces between subsystems actually carry what they must? It is <strong>not</strong> a claim that the exotic physics is real. If the architecture does not even close as a coupled system, that is a finding worth having before any lab. If it does, the next question — is the physics real — is Gary's, and the gap list below says exactly where his equations replace our placeholders.
+</div>
+
+<div class="run">
+  <button id="run">▶ run the architecture</button>
+  <span id="verdict" class="verdict"></span>
+</div>
+
+<div class="flow" id="flow"></div>
+
+<div class="gap" id="gaps"></div>
+
+<h2>Tune it — break an interface, watch it cascade</h2>
+<p class="sub">The transducer is the scale-bridge: if it fails, the field-scale entropy surface can no longer reach the molecular-scale replication barrier, and replication opens too. That coupling is the point.</p>
+<div class="knobs">
+  <div class="knob"><label>power demand <span class="val" id="v-demand">120</span></label><input id="k-demand" type="range" min="20" max="400" value="120"></div>
+  <div class="knob"><label>nacelle imbalance (right − left) <span class="val" id="v-imb">0</span></label><input id="k-imb" type="range" min="-40" max="40" value="0"></div>
+  <div class="knob"><label>entropy temperature <span class="val" id="v-temp">1</span></label><input id="k-temp" type="range" min="0" max="3" step="0.1" value="1"></div>
+  <div class="knob"><label>boundary step dt <span class="val" id="v-dt">0.001</span></label><input id="k-dt" type="range" min="0.001" max="0.01" step="0.001" value="0.001"></div>
+  <div class="knob"><label>transducer coupling threshold <span class="val" id="v-thr">0.15</span></label><input id="k-thr" type="range" min="0.05" max="1" step="0.05" value="0.15"></div>
+</div>
+
+<h2>The six subsystems</h2>
+<div class="scroll">
+<table>
+  <tr><th>#</th><th>subsystem</th><th>what the module computes</th><th>real vs. hypothesis</th></tr>
+  <tr><td>1</td><td><b>Distributed ERPC-Chua boundary control</b></td><td>a ring of Chua oscillators, each a local-only controller, holding a boundary with no central (superluminal) coordination — the horizon-problem answer</td><td>Chua dynamics + the control law are real; that it solves a real warp-bubble horizon is Gary's hypothesis</td></tr>
+  <tr><td>2</td><td><b>Entropy-surface energy density</b></td><td>a free energy u=½(∇φ)²−T·s whose entropy term drives a bounded negative-density region</td><td><span style="color:var(--warn)">placeholder reframing</span> — not a stress-energy tensor; Gary's entropy functional replaces it</td></tr>
+  <tr><td>3</td><td><b>Dual-nacelle differential steering</b></td><td>real differential-drive kinematics: balanced → forward, imbalanced → a proportional, correctly-signed turn</td><td>kinematics are real; the "nacelles as field emitters" is Gary's hypothesis</td></tr>
+  <tr><td>4</td><td><b>Plasma → fusion → nacelle power chain</b></td><td>staged energy balance with per-stage gains; does delivered power meet the nacelle demand</td><td>the arithmetic is real; achievable fusion gain is not claimed</td></tr>
+  <tr><td>5</td><td><b>Quasicrystal transducer (scale bridge)</b></td><td>a cut-and-project aperiodic set whose dense structure factor couples across the spectral gaps a periodic lattice leaves empty — broadband scale-coupling</td><td>cut-and-project + structure factor are real; the scale-transduction role is Gary's hypothesis</td></tr>
+  <tr><td>6</td><td><b>Barrier-reshaping replication</b></td><td>Arrhenius kinetics where the entropy surface (via the bridge) lowers the activation barrier instead of force</td><td>Arrhenius is real; <span style="color:var(--warn)">the reshaping coupling is a placeholder</span> for Gary's landscape functional</td></tr>
+</table>
+</div>
+
+<div class="thesis correct">
+  <strong>Correction carried from the first pass.</strong> The Fibonacci <em>substitution</em> chain (L→LS) is a 1D teaching toy, not the mechanism — real quasicrystals are built by <em>cut-and-project</em>, which is what the transducer uses (with the slope as a free parameter, not wired to the golden mean). And the quasicrystal is a <em>transducer / scale-bridge</em> here, not the centrepiece.
+</div>
+
+<footer>
+  <p>MIT · <a href="https://github.com/sjgant80-hub/nexus-drive">source &amp; per-module mutation gates</a> — the code on this page is the seven gated <code>.mjs</code> modules inlined verbatim by <code>make-page.mjs</code> and diffed in CI. Pure client-side; nothing leaves the page.</p>
+</footer>
+</div>
+
+<script type="module">
+/* ⟦KERNELS-BEGIN⟧ generated by make-page.mjs from the seven gated .mjs modules — do not edit here */
+const isFin = (v) => Number.isFinite(v);
+const allFin = (arr) => arr.every(isFin);
+
+// ===== boundary_control.mjs =====
+// boundary_control.mjs — the distributed ERPC-Chua control loop on the bubble boundary.
+//
+// Gary/Nexus architecture, subsystem 1. The horizon problem: the front of the bubble
+// cannot be steered from a centre because no signal reaches it in time. The answer in the
+// spec is a DISTRIBUTED loop — each boundary cell is its own local controller with only
+// nearest-neighbour coupling, so control is emergent, never centrally dispatched.
+//
+// The oscillator is Chua's circuit (canonical, real: a three-state nonlinear system with a
+// piecewise-linear nonlinearity). What is REAL here is the dynamics and the control law —
+// coupled Chua cells with local error feedback provably either hold a bounded boundary or
+// diverge, and this bench measures which. What is GARY'S HYPOTHESIS (not proven here) is
+// that this loop, applied to a real warp-bubble boundary, solves the horizon problem; the
+// bench tests whether the CONTROL ARCHITECTURE is coherent, not whether the physics is real.
+//
+// Pure and total: bad input returns { ok:false, why }, never throws. Guards use
+// Number.isFinite (rejects non-numbers, Infinity and NaN with no boolean operator to mutate)
+// and are split one-condition-per-line, so every guard is individually killable by the gate.
+
+
+// Chua's piecewise-linear nonlinearity f(x) — the diode characteristic. m0,m1 real slopes.
+function chuaNonlinearity(x, m0, m1) {
+  if (!isFin(x)) return { ok: false, why: 'x must be a finite number' };
+  if (!isFin(m0)) return { ok: false, why: 'm0 must be a finite number' };
+  if (!isFin(m1)) return { ok: false, why: 'm1 must be a finite number' };
+  const f = m1 * x + 0.5 * (m0 - m1) * (Math.abs(x + 1) - Math.abs(x - 1));
+  return { ok: true, f };
+}
+
+// One explicit-Euler step of a single Chua cell driven by a local control input `u`.
+function chuaStep(state, params, u, dt) {
+  if (typeof state !== 'object' || state === null) return { ok: false, why: 'state is { x, y, z }' };
+  if (Array.isArray(state)) return { ok: false, why: 'state is { x, y, z }, not an array' };
+  if (!allFin([state.x, state.y, state.z])) return { ok: false, why: 'state.x/y/z must be finite numbers' };
+  if (typeof params !== 'object' || params === null) return { ok: false, why: 'params is { alpha, beta, m0, m1 }' };
+  if (!allFin([params.alpha, params.beta, params.m0, params.m1])) return { ok: false, why: 'alpha/beta/m0/m1 must be finite numbers' };
+  if (!isFin(u)) return { ok: false, why: 'control input u must be a finite number' };
+  if (!isFin(dt)) return { ok: false, why: 'dt must be a finite number' };
+  if (!(dt > 0)) return { ok: false, why: 'dt must be positive' };
+  const { x, y, z } = state;
+  const { alpha, beta, m0, m1 } = params;
+  const fx = chuaNonlinearity(x, m0, m1).f;
+  const dx = alpha * (y - x - fx);
+  const dy = x - y + z;
+  const dz = -beta * y + u;                 // control enters on the z-equation (the boundary coordinate)
+  return { ok: true, state: { x: x + dt * dx, y: y + dt * dy, z: z + dt * dz } };
+}
+
+// ⚑ GARY-SPEC PORT: this is a PROPORTIONAL consensus placeholder standing in for the ERPC
+// law. It holds the boundary to a bounded residual (a P-controller's steady-state floor) and
+// has a step-size stability limit — enough to prove subsystem 1 CLOSES. Swap Gary's real
+// error-regulated predictive control in here; the port (selfZ, neighbourZs, target, gain) →
+// {u} stays the same, so nothing downstream changes.
+//
+// LOCAL ONLY: each cell sees its own boundary coordinate and its neighbours', never a global
+// broadcast. u = gain·((neighbour_mean − self) + ½(target − self)) — consensus plus a weak
+// target term, so the target diffuses cell-to-cell rather than being dispatched from a centre.
+function localControl(selfZ, neighbourZs, target, gain) {
+  if (!isFin(selfZ)) return { ok: false, why: 'selfZ must be a finite number' };
+  if (!Array.isArray(neighbourZs)) return { ok: false, why: 'neighbourZs must be an array' };
+  if (neighbourZs.length === 0) return { ok: false, why: 'neighbourZs must be non-empty' };
+  if (!allFin(neighbourZs)) return { ok: false, why: 'every neighbour z must be a finite number' };
+  if (!isFin(target)) return { ok: false, why: 'target must be a finite number' };
+  if (!isFin(gain)) return { ok: false, why: 'gain must be a finite number' };
+  if (gain < 0) return { ok: false, why: 'gain must be non-negative' };
+  const mean = neighbourZs.reduce((a, b) => a + b, 0) / neighbourZs.length;
+  const u = gain * ((mean - selfZ) + 0.5 * (target - selfZ));
+  return { ok: true, u };
+}
+
+// Advance a RING of N Chua cells one step under local-only control toward a boundary target.
+function distributedHold(cells, target, params, gain, dt) {
+  if (!Array.isArray(cells)) return { ok: false, why: 'cells must be an array' };
+  if (cells.length < 3) return { ok: false, why: 'a ring needs at least 3 cells' };
+  if (!isFin(target)) return { ok: false, why: 'target must be a finite number' };
+  const n = cells.length;
+  // validate EVERY cell before the loop — a cell is read as its neighbours' neighbour too,
+  // so a bad cell anywhere must be caught before any dereference.
+  for (let i = 0; i < n; i++) {
+    const c = cells[i];
+    if (typeof c !== 'object' || c === null) return { ok: false, why: 'cell ' + i + ' must be an object { x, y, z }' };
+    if (!allFin([c.x, c.y, c.z])) return { ok: false, why: 'cell ' + i + ' must be { x, y, z } finite' };
+  }
+  const next = [];
+  let maxErr = 0;
+  for (let i = 0; i < n; i++) {
+    const c = cells[i];
+    const left = cells[(i - 1 + n) % n];
+    const right = cells[(i + 1) % n];
+    const ctl = localControl(c.z, [left.z, right.z], target, gain);
+    if (!ctl.ok) return { ok: false, why: 'cell ' + i + ': ' + ctl.why };
+    const stepped = chuaStep(c, params, ctl.u, dt);
+    if (!stepped.ok) return { ok: false, why: 'cell ' + i + ': ' + stepped.why };
+    next.push(stepped.state);
+    // Math.max, not `if (err > maxErr)` — the if-form's `>` has an equivalent `>=` mutant
+    // (reassigning maxErr to an equal value changes nothing), which no test could ever kill.
+    maxErr = Math.max(maxErr, Math.abs(stepped.state.z - target));
+  }
+  return { ok: true, cells: next, maxErr };
+}
+
+// Verdict over an error history: does the distributed loop HOLD the boundary (settles below
+// tol) or diverge? "held" is the coherence signal for subsystem 1.
+function isHeld(errorHistory, tol) {
+  if (!Array.isArray(errorHistory)) return { ok: false, why: 'errorHistory must be an array' };
+  if (errorHistory.length < 2) return { ok: false, why: 'errorHistory needs at least 2 samples' };
+  if (!allFin(errorHistory)) return { ok: false, why: 'each error sample must be a finite number' };
+  if (errorHistory.some((v) => v < 0)) return { ok: false, why: 'error samples are magnitudes — never negative' };
+  if (!isFin(tol)) return { ok: false, why: 'tol must be a finite number' };
+  if (!(tol > 0)) return { ok: false, why: 'tol must be positive' };
+  const tailLen = Math.ceil(errorHistory.length / 4);
+  const tail = errorHistory.slice(errorHistory.length - tailLen);
+  const worstTail = Math.max(...tail);
+  const first = errorHistory[0];
+  const last = errorHistory[errorHistory.length - 1];
+  const held = worstTail <= tol;
+  const diverging = last > first * 10;
+  let verdict = 'unsettled';
+  if (held) verdict = 'held';
+  else if (diverging) verdict = 'diverging';
+  return { ok: true, held, diverging, worstTail, verdict };
+}
+
+// ===== nacelle_steering.mjs =====
+// nacelle_steering.mjs — dual nacelle differential steering.
+//
+// Gary/Nexus architecture, subsystem 3. Two nacelles; you steer by the DIFFERENCE in their
+// output, not by a rudder. This is real differential-drive kinematics (the same maths that
+// steers a two-track vehicle) applied to the drive's two field sources: equal output = pure
+// forward, unequal output = a turn whose rate is set by the imbalance over the nacelle spacing.
+//
+// REAL here: the kinematics. GARY'S HYPOTHESIS: that the two "nacelles" are field emitters whose
+// differential reshapes the bubble's heading. The bench tests that the steering law is coherent —
+// balanced → straight, imbalanced → a proportional, correctly-signed turn.
+//
+// Pure and total; guards use Number.isFinite and are one-condition-per-line.
+
+
+// Net forward thrust and yaw rate from left/right nacelle outputs over a baseline (spacing).
+// forward = mean of the two; yawRate = (right − left) / baseline (right stronger → turn left,
+// i.e. positive yaw = counter-clockwise, the standard convention).
+function differential(left, right, baseline) {
+  if (!isFin(left)) return { ok: false, why: 'left nacelle output must be a finite number' };
+  if (!isFin(right)) return { ok: false, why: 'right nacelle output must be a finite number' };
+  if (!isFin(baseline)) return { ok: false, why: 'baseline (nacelle spacing) must be a finite number' };
+  if (!(baseline > 0)) return { ok: false, why: 'baseline must be positive' };
+  const forward = (left + right) / 2;
+  const yawRate = (right - left) / baseline;
+  return { ok: true, forward, yawRate };
+}
+
+// One kinematic step. state = { x, y, heading } (heading in radians). left/right nacelle
+// outputs, baseline, dt. Advances heading by yawRate·dt and position by forward·dt along the
+// (new) heading. Returns the new pose plus the forward/yaw that produced it.
+function steer(state, left, right, baseline, dt) {
+  if (typeof state !== 'object' || state === null) return { ok: false, why: 'state is { x, y, heading }' };
+  if (Array.isArray(state)) return { ok: false, why: 'state is { x, y, heading }, not an array' };
+  if (!isFin(state.x)) return { ok: false, why: 'state.x must be a finite number' };
+  if (!isFin(state.y)) return { ok: false, why: 'state.y must be a finite number' };
+  if (!isFin(state.heading)) return { ok: false, why: 'state.heading must be a finite number' };
+  if (!isFin(dt)) return { ok: false, why: 'dt must be a finite number' };
+  if (!(dt > 0)) return { ok: false, why: 'dt must be positive' };
+  const d = differential(left, right, baseline);
+  if (!d.ok) return { ok: false, why: d.why };
+  const heading = state.heading + d.yawRate * dt;
+  const x = state.x + d.forward * Math.cos(heading) * dt;
+  const y = state.y + d.forward * Math.sin(heading) * dt;
+  return { ok: true, state: { x, y, heading }, forward: d.forward, yawRate: d.yawRate };
+}
+
+// Verdict: given a commanded left/right, does the drive steer as intended? balanced within
+// eps → 'straight'; right>left → 'port' (positive yaw); left>right → 'starboard'.
+function steeringMode(left, right, eps) {
+  if (!isFin(left)) return { ok: false, why: 'left must be a finite number' };
+  if (!isFin(right)) return { ok: false, why: 'right must be a finite number' };
+  if (!isFin(eps)) return { ok: false, why: 'eps must be a finite number' };
+  if (!(eps >= 0)) return { ok: false, why: 'eps must be non-negative' };
+  const diff = right - left;
+  if (Math.abs(diff) <= eps) return { ok: true, mode: 'straight', diff };
+  if (diff > 0) return { ok: true, mode: 'port', diff };
+  return { ok: true, mode: 'starboard', diff };
+}
+
+// ===== power_chain.mjs =====
+// power_chain.mjs — the continuous plasma -> catalyzed fusion -> nacelle power path.
+//
+// Gary/Nexus architecture, subsystem 4. Power is produced in stages, each with a gain
+// (a fraction < 1 for a lossy conversion, or > 1 for a net-energy-gain stage such as
+// catalyzed fusion with Q > 1). The chain folds an input source through the stages; the
+// question the bench answers is whether the final delivered power meets the nacelles' demand.
+//
+// REAL here: the energy-balance arithmetic and the scaling verdict. GARY'S HYPOTHESIS: that a
+// plasma feedstock through a catalyzed-fusion stage can be scaled to drive the nacelles. The
+// bench does not claim the fusion gain is achievable — it tests whether the chain BALANCES:
+// given each stage's gain, does supply reach demand, and where is the margin lost.
+//
+// Pure and total; Number.isFinite guards, one condition per line.
+
+
+// One stage: output = input * gain. gain > 0 (a stage never inverts power); gain < 1 is a
+// loss, gain > 1 is a net-gain stage (e.g. Q>1 fusion).
+function stage(input, gain) {
+  if (!isFin(input)) return { ok: false, why: 'input power must be a finite number' };
+  if (input < 0) return { ok: false, why: 'input power cannot be negative' };
+  if (!isFin(gain)) return { ok: false, why: 'gain must be a finite number' };
+  if (!(gain > 0)) return { ok: false, why: 'gain must be positive' };
+  return { ok: true, output: input * gain };
+}
+
+// Fold a source through an ordered list of stage gains. Returns the delivered power and the
+// running power after each stage (so a lossy stage is visible in the trace).
+function chain(source, gains) {
+  if (!isFin(source)) return { ok: false, why: 'source power must be a finite number' };
+  if (source < 0) return { ok: false, why: 'source power cannot be negative' };
+  if (!Array.isArray(gains)) return { ok: false, why: 'gains must be an array' };
+  if (gains.length === 0) return { ok: false, why: 'gains must be a non-empty stage list' };
+  const trace = [];
+  let power = source;
+  for (let i = 0; i < gains.length; i++) {
+    const s = stage(power, gains[i]);
+    if (!s.ok) return { ok: false, why: 'stage ' + i + ': ' + s.why };
+    power = s.output;
+    trace.push(power);
+  }
+  return { ok: true, delivered: power, trace };
+}
+
+// Does the delivered power meet the nacelles' demand? margin = supply - demand; scales when
+// margin >= 0. ratio = supply/demand (headroom factor).
+function scales(supply, demand) {
+  if (!isFin(supply)) return { ok: false, why: 'supply must be a finite number' };
+  if (supply < 0) return { ok: false, why: 'supply cannot be negative' };
+  if (!isFin(demand)) return { ok: false, why: 'demand must be a finite number' };
+  if (!(demand > 0)) return { ok: false, why: 'demand must be positive' };
+  const margin = supply - demand;
+  const ratio = supply / demand;
+  const meets = margin >= 0;
+  return { ok: true, meets, margin, ratio };
+}
+
+// ===== transducer.mjs =====
+// transducer.mjs — the quasicrystal as SCALE-BRIDGE / transducer (not the main event).
+//
+// Gary/Nexus architecture, subsystem 5, and the correction to our first spec. Two things
+// that first pass got wrong, fixed here:
+//
+//   1. The Fibonacci substitution chain (L -> LS) is a 1D teaching toy, NOT the mechanism.
+//      The real construction of a quasicrystal is CUT-AND-PROJECT: take a periodic lattice in
+//      a higher dimension, keep the points that fall in a strip of IRRATIONAL slope, and
+//      project them down. cutAndProject() below does exactly that. The slope is a PARAMETER
+//      (it sets the symmetry class); it is not wired to the golden mean.
+//   2. The quasicrystal is not the centrepiece — it is a TRANSDUCER. Aperiodic order gives a
+//      dense set of structure-factor peaks (many spatial frequencies couple at once) rather
+//      than the single Bragg peak of a periodic lattice. That BROADBAND coupling is what lets
+//      it bridge between two scales/frequencies instead of resonating at one — its whole job
+//      in the architecture.
+//
+// REAL here: the cut-and-project construction and the structure factor are standard solid-state
+// physics. GARY'S HYPOTHESIS: that this element transduces between the molecular scale
+// (subsystem 6) and the field scale (subsystems 1-2). The bench tests the coupling is broadband.
+//
+// Pure and total; Number.isFinite guards, one condition per line.
+
+
+// 1D cut-and-project, in its closed (Sturmian/Beatty) form — the same model set the strip
+// projection produces, computed directly and deterministically. The Sturmian word
+// s_k = floor((k+1)α) − floor(kα) ∈ {0,1} (α = slope/(1+slope), irrational when the slope is)
+// selects between two gap lengths, a long L = windowWidth and a short S = α·windowWidth. The
+// result is a genuine 1D quasicrystal: exactly two gaps, arranged aperiodically, with the
+// gap ratio fixed by the slope. This is the mechanism; the Fibonacci SUBSTITUTION string was
+// only the 1D teaching toy.
+function cutAndProject(count, slope, windowWidth) {
+  if (!Number.isInteger(count)) return { ok: false, why: 'count must be an integer' };
+  if (count < 1) return { ok: false, why: 'count must be at least 1' };
+  if (!isFin(slope)) return { ok: false, why: 'slope must be a finite number' };
+  if (!(slope > 0)) return { ok: false, why: 'slope must be positive' };
+  if (!isFin(windowWidth)) return { ok: false, why: 'windowWidth must be a finite number' };
+  if (!(windowWidth > 0)) return { ok: false, why: 'windowWidth must be positive' };
+  const alpha = slope / (1 + slope);         // irrational density in (0,1)
+  const L = windowWidth;
+  const S = alpha * windowWidth;
+  const sites = [0];
+  let pos = 0;
+  for (let k = 0; k < count - 1; k++) {
+    const long = (Math.floor((k + 1) * alpha) - Math.floor(k * alpha)) > 0;   // Sturmian bit
+    pos += long ? L : S;
+    sites.push(pos);
+  }
+  return { ok: true, sites };
+}
+
+// Aperiodicity test: the sequence of GAPS between consecutive sites has no periodic repeat.
+// For each candidate period p (1..floor(k/2)) check whether gaps[i] == gaps[i+p] for all i;
+// if some p makes the gap sequence repeat, it is periodic. Aperiodic = no such p.
+function isAperiodic(sites, tol) {
+  if (!Array.isArray(sites)) return { ok: false, why: 'sites must be an array' };
+  if (sites.length < 4) return { ok: false, why: 'need at least 4 sites to see a repeat' };
+  if (!sites.every(isFin)) return { ok: false, why: 'every site must be a finite number' };
+  if (!isFin(tol)) return { ok: false, why: 'tol must be a finite number' };
+  if (!(tol > 0)) return { ok: false, why: 'tol must be positive' };
+  const gaps = [];
+  for (let i = 1; i < sites.length; i++) gaps.push(sites[i] - sites[i - 1]);
+  const distinct = [];
+  for (const g of gaps) {
+    if (!distinct.some((d) => Math.abs(d - g) <= tol)) distinct.push(g);
+  }
+  let periodic = false;
+  for (let p = 1; p <= Math.floor(gaps.length / 2); p++) {
+    let repeats = true;
+    for (let i = 0; i + p < gaps.length; i++) {
+      if (Math.abs(gaps[i] - gaps[i + p]) > tol) { repeats = false; break; }
+    }
+    if (repeats) { periodic = true; break; }
+  }
+  return { ok: true, aperiodic: !periodic, distinctGaps: distinct.length };
+}
+
+// Structure-factor magnitude at one spatial frequency f: |(1/N) Σ exp(2πi f x_j)|, in [0,1].
+// A periodic lattice peaks at integer f (a single Bragg line); an aperiodic set spreads its
+// peaks across many f — the broadband signature that makes it a transducer.
+function structureFactor(sites, f) {
+  if (!Array.isArray(sites)) return { ok: false, why: 'sites must be an array' };
+  if (sites.length === 0) return { ok: false, why: 'sites must be non-empty' };
+  if (!sites.every(isFin)) return { ok: false, why: 'every site must be a finite number' };
+  if (!isFin(f)) return { ok: false, why: 'f must be a finite number' };
+  let re = 0;
+  let im = 0;
+  for (const x of sites) {
+    const ph = 2 * Math.PI * f * x;
+    re += Math.cos(ph);
+    im += Math.sin(ph);
+  }
+  const mag = Math.sqrt(re * re + im * im) / sites.length;
+  return { ok: true, magnitude: mag };
+}
+
+// Coupling bandwidth: over a frequency grid, the FRACTION of frequencies whose structure
+// factor exceeds `threshold`. Broadband (many coupled frequencies) => a good transducer.
+function couplingBandwidth(sites, freqs, threshold) {
+  if (!Array.isArray(sites)) return { ok: false, why: 'sites must be an array' };
+  if (sites.length === 0) return { ok: false, why: 'sites must be non-empty' };
+  if (!Array.isArray(freqs)) return { ok: false, why: 'freqs must be an array' };
+  if (freqs.length === 0) return { ok: false, why: 'freqs must be non-empty' };
+  if (!isFin(threshold)) return { ok: false, why: 'threshold must be a finite number' };
+  if (threshold < 0) return { ok: false, why: 'threshold must be non-negative' };
+  let above = 0;
+  for (const f of freqs) {
+    const sf = structureFactor(sites, f);
+    if (!sf.ok) return { ok: false, why: sf.why };
+    if (sf.magnitude >= threshold) above++;
+  }
+  return { ok: true, fraction: above / freqs.length, coupled: above, total: freqs.length };
+}
+
+// ===== entropy_surface.mjs =====
+// entropy_surface.mjs — the entropy-surface reframing of negative energy density.
+//
+// Gary/Nexus architecture, subsystem 2. The Alcubierre-class problem is that the metric needs
+// regions of NEGATIVE energy density (exotic matter). The spec's move is to reframe that
+// thermodynamically: an effective energy density built as a FREE ENERGY, u_eff = elastic − T·s,
+// where a steep entropy surface (the s term, scaled by an effective temperature T) drives the
+// effective density negative in a bounded region — no exotic matter posited, a free-energy
+// balance instead.
+//
+// ⚑ THIS IS A PLACEHOLDER / REFRAMING MODEL, clearly labelled. It does NOT compute a
+// stress-energy tensor and it does NOT claim the reframing is physically valid. It computes a
+// concrete, honest free-energy field so the ARCHITECTURE can be wired and its behaviour seen:
+// given a field profile and an effective temperature, where does u_eff go negative, and how
+// much of the surface does that region cover? GARY'S SPEC swaps in the real entropy functional.
+//
+// Pure and total; Number.isFinite guards, one condition per line.
+
+
+// Discrete spatial gradient of a 1D field: central differences inside, one-sided at the ends.
+function gradient(field) {
+  if (!Array.isArray(field)) return { ok: false, why: 'field must be an array' };
+  if (field.length < 2) return { ok: false, why: 'field needs at least 2 samples for a gradient' };
+  if (!field.every(isFin)) return { ok: false, why: 'every field sample must be a finite number' };
+  const n = field.length;
+  const g = new Array(n);
+  g[0] = field[1] - field[0];
+  g[n - 1] = field[n - 1] - field[n - 2];
+  for (let i = 1; i < n - 1; i++) g[i] = (field[i + 1] - field[i - 1]) / 2;
+  return { ok: true, gradient: g };
+}
+
+// Effective energy density as a free energy: u_eff = ½(∇φ)² − T·|∇φ|. The elastic term is the
+// gradient energy; the entropy-surface term (here |∇φ|, the surface measure, scaled by the
+// effective temperature T) can pull u_eff below zero. For a point with gradient g ≠ 0,
+// u_eff < 0 exactly when |g| < 2T — a bounded "negative" band, not a runaway.
+function effectiveDensity(field, temperature) {
+  if (!isFin(temperature)) return { ok: false, why: 'temperature must be a finite number' };
+  if (temperature < 0) return { ok: false, why: 'temperature cannot be negative' };
+  const gr = gradient(field);
+  if (!gr.ok) return { ok: false, why: gr.why };
+  const density = gr.gradient.map((g) => {
+    const elastic = 0.5 * g * g;
+    const entropy = Math.abs(g);
+    return elastic - temperature * entropy;
+  });
+  return { ok: true, density };
+}
+
+// Where does the effective density go negative, and over what fraction of the surface?
+function negativeRegion(density) {
+  if (!Array.isArray(density)) return { ok: false, why: 'density must be an array' };
+  if (density.length === 0) return { ok: false, why: 'density must be non-empty' };
+  if (!density.every(isFin)) return { ok: false, why: 'every density sample must be a finite number' };
+  // forEach, not a for(;i<len;) loop — a bounded loop's `<` has an equivalent `<=` mutant
+  // (the extra pass reads density[len] = undefined, and `undefined < 0` is false → a no-op).
+  const indices = [];
+  density.forEach((v, i) => { if (v < 0) indices.push(i); });
+  return { ok: true, indices, fraction: indices.length / density.length, min: Math.min(...density) };
+}
+
+// ===== replication.mjs =====
+// replication.mjs — molecular replication by RESHAPING the activation barrier, not by force.
+//
+// Gary/Nexus architecture, subsystem 6. The spec's move: instead of pushing atoms together
+// mechanically, reshape the energy landscape so the activation barrier drops and replication
+// proceeds thermally on its own. The reaction rate is Arrhenius (canonical, real):
+// k = A·exp(−Ea/T). "Reshaping" lowers the EFFECTIVE Ea by coupling to the entropy surface
+// (subsystem 2) — the more entropy gradient the surface presents, the lower the barrier.
+//
+// REAL here: the Arrhenius rate and the threshold verdict. GARY'S HYPOTHESIS (labelled): that
+// an entropy surface can reshape a real activation barrier. The barrier-lowering coupling is a
+// PLACEHOLDER model — a linear reshape floored at zero (a barrier cannot go negative). GARY'S
+// SPEC swaps in the real landscape functional; the ports stay the same.
+//
+// Pure and total; Number.isFinite guards, one condition per line.
+
+
+// Arrhenius reaction rate k = prefactor · exp(−barrier / temperature), in kT units.
+function arrheniusRate(barrier, temperature, prefactor) {
+  if (!isFin(barrier)) return { ok: false, why: 'barrier must be a finite number' };
+  if (barrier < 0) return { ok: false, why: 'activation barrier cannot be negative' };
+  if (!isFin(temperature)) return { ok: false, why: 'temperature must be a finite number' };
+  if (!(temperature > 0)) return { ok: false, why: 'temperature must be positive' };
+  if (!isFin(prefactor)) return { ok: false, why: 'prefactor must be a finite number' };
+  if (!(prefactor > 0)) return { ok: false, why: 'prefactor must be positive' };
+  const rate = prefactor * Math.exp(-barrier / temperature);
+  return { ok: true, rate };
+}
+
+// Reshape the barrier: effective Ea = max(0, barrier − coupling·|entropyGradient|). The entropy
+// surface lowers the barrier rather than force raising the reactants over it. Floored at 0 — a
+// barrier cannot be negative, and `floored` reports when the surface has fully flattened it.
+function reshape(barrier, entropyGradient, coupling) {
+  if (!isFin(barrier)) return { ok: false, why: 'barrier must be a finite number' };
+  if (barrier < 0) return { ok: false, why: 'barrier cannot be negative' };
+  if (!isFin(entropyGradient)) return { ok: false, why: 'entropyGradient must be a finite number' };
+  if (!isFin(coupling)) return { ok: false, why: 'coupling must be a finite number' };
+  if (coupling < 0) return { ok: false, why: 'coupling must be non-negative' };
+  const lowered = barrier - coupling * Math.abs(entropyGradient);
+  const effective = Math.max(0, lowered);
+  const floored = lowered <= 0;
+  return { ok: true, effective, floored, dropped: barrier - effective };
+}
+
+// Does the reaction proceed? rate at or above the threshold → replication.
+function replicates(rate, threshold) {
+  if (!isFin(rate)) return { ok: false, why: 'rate must be a finite number' };
+  if (rate < 0) return { ok: false, why: 'rate cannot be negative' };
+  if (!isFin(threshold)) return { ok: false, why: 'threshold must be a finite number' };
+  if (!(threshold > 0)) return { ok: false, why: 'threshold must be positive' };
+  return { ok: true, replicates: rate >= threshold, rate, threshold };
+}
+
+// ===== bus.mjs =====
+// bus.mjs — the interface layer. Gary's actual ask: wire the six subsystems together through
+// defined ports and run the coupled architecture, so we can SEE whether it closes.
+//
+// The wiring (ports named, so a subsystem can be swapped without touching the others):
+//
+//   power_chain ──delivered──▶ scales(vs nacelle demand) ──▶ nacelle_steering (thrust + yaw)
+//   entropy_surface ──neg-region depth──▶ transducer(scale bridge) ──▶ replication.reshape(barrier)
+//   boundary_control ──held?──▶ (the horizon-problem loop stands or falls on its own)
+//
+// The transducer is the SCALE BRIDGE, not the centrepiece: its broadband coupling is what lets
+// the field-scale entropy surface reshape the molecular-scale replication barrier at all.
+//
+// "closes" = every subsystem is internally coherent AND every interface between them is
+// satisfied. It is a test of the ARCHITECTURE's coherence, never a claim the physics is real.
+// A subsystem that returns ok:false is reported as incoherent with its own reason — the bus
+// never throws.
+
+
+// modules whose dynamics are honest PLACEHOLDERS awaiting Gary's real equations — reported so
+// the gap list travels with every run.
+const GAP_LIST = Object.freeze([
+  { module: 'boundary_control', port: 'localControl', needs: "Gary's ERPC law (this stands in a proportional consensus placeholder)" },
+  { module: 'entropy_surface', port: 'effectiveDensity', needs: "Gary's real entropy functional (this is a free-energy reframing model, not a stress-energy tensor)" },
+  { module: 'replication', port: 'reshape', needs: "Gary's real landscape functional (this is a linear barrier-lowering placeholder)" },
+]);
+
+// off-integer frequency grid: three probes strictly BETWEEN each pair of a unit lattice's
+// Bragg lines (the spectral gaps). Built explicitly (no floating-point "distance from integer"
+// filter, which is unkillable-by-construction), so every frequency is cleanly off-resonance.
+function offIntegerGrid() {
+  const offsets = [0.3, 0.5, 0.7];
+  return Array.from({ length: 20 }, (_, k) => k).flatMap((k) => offsets.map((o) => k + o));
+}
+
+function defaultConfig() {
+  // Array.from, not index loops — a bounded loop's `<` carries an equivalent `<=` mutant.
+  const field = Array.from({ length: 24 }, (_, i) => i * 0.5);      // a gentle ramp (small gradient → a negative band)
+  const cells = Array.from({ length: 5 }, (_, i) => ({ x: 0.1 * (i - 2), y: 0, z: 2 - i }));
+  const freqs = offIntegerGrid();
+  return {
+    power: { source: 50, gains: [5, 0.8, 0.9], demand: 120 },  // plasma → fusion×5 → losses; 180 delivered vs 120 demand
+    nacelle: { left: 60, right: 60, baseline: 4 },
+    field, temperature: 1,
+    boundary: { cells, target: 0, gain: 120, dt: 0.001, steps: 1500, tol: 0.25 },
+    transducer: { count: 60, slope: 0.618033988749895, window: 1, freqs, threshold: 0.15 },
+    replication: { barrier: 10, coupling: 12, temperature: 1, prefactor: 1, rateThreshold: 0.1 },
+  };
+}
+
+function num(v) { return Number.isFinite(v); }
+
+function run(config) {
+  if (typeof config !== 'object' || config === null) return { ok: false, why: 'config must be an object (try defaultConfig())' };
+  if (Array.isArray(config)) return { ok: false, why: 'config must be an object, not an array' };
+  const subsystems = {};
+
+  // 1 · POWER CHAIN → does delivered power meet the nacelle demand?
+  const p = config.power || {};
+  const ch = chain(p.source, p.gains);
+  if (!ch.ok) subsystems.power = { coherent: false, why: 'power chain: ' + ch.why };
+  else {
+    const sc = scales(ch.delivered, p.demand);
+    if (!sc.ok) subsystems.power = { coherent: false, why: 'power scaling: ' + sc.why };
+    else subsystems.power = { coherent: sc.meets, delivered: ch.delivered, demand: p.demand, margin: sc.margin, ratio: sc.ratio };
+  }
+
+  // 2 · NACELLE STEERING → does the differential produce forward thrust (and steer when asked)?
+  const nc = config.nacelle || {};
+  const df = differential(nc.left, nc.right, nc.baseline);
+  if (!df.ok) subsystems.steering = { coherent: false, why: 'steering: ' + df.why };
+  else subsystems.steering = { coherent: df.forward > 0, forward: df.forward, yawRate: df.yawRate };
+
+  // 3 · ENTROPY SURFACE → does the reframing produce a negative-energy region?
+  const ed = effectiveDensity(config.field, config.temperature);
+  let negDepth = 0;
+  if (!ed.ok) subsystems.entropy = { coherent: false, why: 'entropy surface: ' + ed.why };
+  else {
+    const nr = negativeRegion(ed.density);
+    if (!nr.ok) subsystems.entropy = { coherent: false, why: 'negative region: ' + nr.why };
+    else {
+      negDepth = num(nr.min) ? Math.abs(Math.min(0, nr.min)) : 0;
+      subsystems.entropy = { coherent: nr.fraction > 0, negativeFraction: nr.fraction, depth: negDepth };
+    }
+  }
+
+  // 4 · BOUNDARY CONTROL → does the distributed loop hold the boundary (horizon problem)?
+  // Sequential guards (each individually killable), then Array.from over the step count so the
+  // loop has no `<` bound to carry an equivalent `<=` mutant.
+  const b = config.boundary || {};
+  if (!Array.isArray(b.cells)) subsystems.boundary = { coherent: false, why: 'boundary: cells must be an array' };
+  else if (!Number.isInteger(b.steps)) subsystems.boundary = { coherent: false, why: 'boundary: steps must be an integer' };
+  else if (!(b.steps > 0)) subsystems.boundary = { coherent: false, why: 'boundary: steps must be positive' };
+  else {
+    let cells = b.cells;
+    let bad = null;
+    const hist = [];
+    Array.from({ length: b.steps }).forEach(() => {
+      if (bad !== null) return;
+      const r = distributedHold(cells, b.target, { alpha: 9, beta: 14.28, m0: -1.143, m1: -0.714 }, b.gain, b.dt);
+      if (!r.ok) { bad = r.why; return; }
+      cells = r.cells;
+      hist.push(r.maxErr);
+    });
+    if (bad !== null) subsystems.boundary = { coherent: false, why: 'boundary: ' + bad };
+    else {
+      const held = isHeld(hist, b.tol);
+      subsystems.boundary = held.ok ? { coherent: held.held, verdict: held.verdict, worstTail: held.worstTail } : { coherent: false, why: held.why };
+    }
+  }
+
+  // 5 · TRANSDUCER (SCALE BRIDGE) → aperiodic + broadband coupling beyond a periodic lattice?
+  const t = config.transducer || {};
+  const qc = cutAndProject(t.count, t.slope, t.window);
+  let bridged = false;
+  if (!qc.ok) subsystems.transducer = { coherent: false, why: 'transducer: ' + qc.why };
+  else {
+    const ap = isAperiodic(qc.sites, 1e-9);
+    const qb = couplingBandwidth(qc.sites, t.freqs, t.threshold);
+    const per = Array.from({ length: t.count }, (_, i) => i);       // periodic control lattice
+    const pb = couplingBandwidth(per, t.freqs, t.threshold);
+    // sequential checks — each result individually reportable and killable.
+    if (!ap.ok) subsystems.transducer = { coherent: false, why: 'transducer: ' + ap.why };
+    else if (!qb.ok) subsystems.transducer = { coherent: false, why: 'transducer: ' + qb.why };
+    else if (!pb.ok) subsystems.transducer = { coherent: false, why: 'transducer: ' + pb.why };
+    else {
+      bridged = ap.aperiodic && qb.fraction > pb.fraction;
+      subsystems.transducer = { coherent: bridged, aperiodic: ap.aperiodic, coupledFraction: qb.fraction, periodicFraction: pb.fraction };
+    }
+  }
+
+  // 6 · REPLICATION → the entropy surface (via the bridge) reshapes the barrier over threshold?
+  // INTERFACE: the entropy-surface depth feeds the reshape ONLY IF the transducer bridges the
+  // scales — otherwise the field-scale surface cannot reach the molecular-scale barrier.
+  const rp = config.replication || {};
+  const gradIn = bridged ? negDepth * 10 : 0;                 // the bridge carries the surface depth to the barrier
+  const rs = reshape(rp.barrier, gradIn, rp.coupling);
+  if (!rs.ok) subsystems.replication = { coherent: false, why: 'reshape: ' + rs.why };
+  else {
+    const kr = arrheniusRate(rs.effective, rp.temperature, rp.prefactor);
+    if (!kr.ok) subsystems.replication = { coherent: false, why: 'rate: ' + kr.why };
+    else {
+      const rep = replicates(kr.rate, rp.rateThreshold);
+      subsystems.replication = rep.ok
+        ? { coherent: rep.replicates, effectiveBarrier: rs.effective, rate: kr.rate, viaBridge: bridged }
+        : { coherent: false, why: 'replicates: ' + rep.why };
+    }
+  }
+
+  const order = ['power', 'steering', 'entropy', 'boundary', 'transducer', 'replication'];
+  const closes = order.every((k) => subsystems[k] && subsystems[k].coherent === true);
+  const openPorts = order.filter((k) => !(subsystems[k] && subsystems[k].coherent === true));
+  return { ok: true, closes, subsystems, openPorts, gapList: GAP_LIST };
+}
+/* ⟦KERNELS-END⟧ */
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+const LABELS = {
+  power: ['Power chain', 'plasma → fusion → nacelle'],
+  steering: ['Nacelle steering', 'dual differential'],
+  entropy: ['Entropy surface', 'negative-density region'],
+  boundary: ['Boundary control', 'distributed ERPC-Chua'],
+  transducer: ['Transducer', 'quasicrystal scale-bridge'],
+  replication: ['Replication', 'barrier reshaping'],
+};
+
+function config() {
+  const c = defaultConfig();
+  c.power.demand = Number($('k-demand').value);
+  const imb = Number($('k-imb').value);
+  c.nacelle.left = 60 - imb / 2;
+  c.nacelle.right = 60 + imb / 2;
+  c.temperature = Number($('k-temp').value);
+  c.boundary.dt = Number($('k-dt').value);
+  c.boundary.steps = c.boundary.dt > 0.004 ? 400 : 1500;
+  c.transducer.threshold = Number($('k-thr').value);
+  return c;
+}
+
+function render() {
+  const r = run(config());
+  $('verdict').innerHTML = r.closes
+    ? '<span class="v-closes">✓ the architecture CLOSES</span>'
+    : '<span class="v-open">✗ open ports: ' + esc(r.openPorts.join(', ')) + '</span>';
+  const flow = $('flow');
+  flow.innerHTML = '';
+  for (const key of ['power', 'steering', 'entropy', 'boundary', 'transducer', 'replication']) {
+    const s = r.subsystems[key];
+    const [name, note] = LABELS[key];
+    const detail = s.why ? s.why : Object.entries(s).filter(([k]) => k !== 'coherent')
+      .map(([k, v]) => k + ': ' + (typeof v === 'number' ? (Math.round(v * 1000) / 1000) : v)).join(' · ');
+    const row = document.createElement('div');
+    row.className = 'sub-row';
+    row.innerHTML = '<div class="name"><span class="dot ' + (s.coherent ? 'ok' : 'no') + '"></span>' + esc(name) +
+      '<small>' + esc(note) + '</small></div><div class="detail">' + esc(detail) + '</div>';
+    flow.append(row);
+  }
+  const g = $('gaps');
+  g.innerHTML = '<h3>gap list — where Gary\'s equations replace our placeholders</h3><ul>' +
+    r.gapList.map((x) => '<li><code>' + esc(x.module) + '.' + esc(x.port) + '</code> — ' + esc(x.needs) + '</li>').join('') + '</ul>';
+}
+
+for (const [id, valId, fmt] of [['k-demand', 'v-demand', (v) => v], ['k-imb', 'v-imb', (v) => v],
+  ['k-temp', 'v-temp', (v) => v], ['k-dt', 'v-dt', (v) => v], ['k-thr', 'v-thr', (v) => v]]) {
+  $(id).addEventListener('input', () => { $(valId).textContent = fmt($(id).value); render(); });
+}
+$('run').addEventListener('click', render);
+render();
+</script>
+</body>
+</html>
