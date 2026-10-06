@@ -2,11 +2,11 @@
 
 **Live: https://sjgant80-hub.github.io/nexus-drive/**
 
-Gary Floyd's / Nexus propulsion architecture, built and interfaced as seven mutation-tested
+Gary W. Floyd's (Lumiea Systems Research Division — ThunderStruck Service LLC) / Nexus propulsion architecture, built and interfaced as seven mutation-tested
 modules. Press run on the live page: the bench reports whether the coupled architecture
 **closes** — every subsystem internally coherent and every interface between them satisfied.
 
-> **Architecture: Gary Floyd / Nexus. Modeling & gate: the estate.** This is a test of the
+> **Architecture: Gary W. Floyd (Lumiea Systems Research Division — ThunderStruck Service LLC) / Nexus. Modeling & gate: the estate.** This is a test of the
 > architecture's *coherence*, not a claim that the exotic physics is real. If the coupled
 > system does not even close, that is a finding before any lab spend. If it does, whether the
 > physics is real is Gary's question — and the gap list says exactly where his equations

@@ -17,3 +17,7 @@ nexus-drive is a sovereign, MIT-licensed build by Simon Gant (UK) — it runs in
 ## Citation
 
 Gant, Simon (2026). *nexus-drive*. https://sjgant80-hub.github.io/nexus-drive/
+
+## Credits
+
+The coupled propulsion/architecture under test is the design and hypothesis of Gary W. Floyd, Lumiea Systems Research Division — ThunderStruck Service LLC, from his Nexus work (GEP). nexus-drive is the estate’s modeling + mutation-gate bench; whether the physics closes is Gary’s question, and the gap list says where his equations would have to be right. Credit: Gary W. Floyd / Nexus.

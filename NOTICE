@@ -1,0 +1,11 @@
+nexus-drive — credits and provenance
+
+The coupled propulsion / warp-drive ARCHITECTURE this bench builds and interfaces (the seven subsystems,
+the horizon-problem control loop, the entropy-surface coupling) is the design and hypothesis of
+GARY W. FLOYD, Lumiea Systems Research Division — ThunderStruck Service LLC (New Caney, Texas), from his
+Nexus work and the Guided Entropy Principle. nexus-drive is the estate's own MODELING + mutation-gate bench:
+it builds each subsystem as a witness-clean module and reports whether the coupled system closes. Whether
+the underlying physics is real is Gary's question; the gap list marks exactly where his equations would have
+to hold. Architecture: Gary W. Floyd / Nexus. Modeling & gate: the estate.
+
+Code: MIT.
